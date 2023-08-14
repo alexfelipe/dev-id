@@ -1,6 +1,10 @@
 package br.com.alexfelipe.devid.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,6 +26,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +48,7 @@ import br.com.alexfelipe.devid.models.Skill
 import br.com.alexfelipe.devid.samples.sampleSkills
 import br.com.alexfelipe.devid.ui.theme.DevIdTheme
 import coil.compose.AsyncImage
+import kotlinx.coroutines.delay
 
 @Composable
 fun MainScreen(
@@ -64,7 +74,7 @@ fun MainScreen(
                             Color(0xFF2196F3),
                             Color(0xFF009688),
                         ),
-                        )
+                    )
                 )
                 .height(250.dp)
         ) {
@@ -98,11 +108,17 @@ fun MainScreen(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+        var isShowSkills by remember {
+            mutableStateOf(false)
+        }
         Row(
             Modifier
                 .padding(8.dp)
                 .clip(CircleShape)
-                .padding(8.dp),
+                .padding(8.dp)
+                .clickable {
+                    isShowSkills = !isShowSkills
+                },
         ) {
             Icon(
                 imageVector = Icons.Filled.ArrowRight,
@@ -113,19 +129,35 @@ fun MainScreen(
                 fontSize = 18.sp
             )
         }
-        Column {
-            for (skill in skills) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CircularProgressIndicator(
-                        skill.level,
-                    )
-                    Text(text = skill.name)
+        AnimatedVisibility(visible = isShowSkills) {
+            Column {
+                for (skill in skills) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        var level by remember {
+                            mutableStateOf(0f)
+                        }
+                        LaunchedEffect(null) {
+                            delay(200)
+                            level = skill.level
+                        }
+                        val animatedCircularValue by animateFloatAsState(
+                            targetValue = level,
+                            label = "circular progress value",
+                            animationSpec = keyframes {
+                                this.durationMillis = 500
+                            }
+                        )
+                        CircularProgressIndicator(
+                            animatedCircularValue,
+                        )
+                        Text(text = skill.name)
+                    }
                 }
             }
         }
